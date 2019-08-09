@@ -6,20 +6,16 @@ from core.models import UserProfile
 
 class SlotManager(models.Manager):
 
-    def get_canditate_slots(self):
+    def get_interview_slots(self, role, start, end):
+        cross_ref_dct = {
+            'CA': 'IN',
+            'IN': 'CA',
+        }
         return self.get_queryset().filter(
-            user_profile__role='CA',
+            user_profile__role=cross_ref_dct[role],
             status='F',
-            start__gte=self.start,
-            end__lte=self.end,
-        )
-
-    def get_interviewer_slots(self):
-        return self.get_queryset().filter(
-            user_profile__role='IN',
-            status='F',
-            start__gte=self.start,
-            end__lte=self.end,
+            start__gte=start,
+            end__lte=end,
         )
 
 
@@ -28,7 +24,7 @@ class Slot(AbstractTimeStamp):
         ('F', 'Free'),
         ('B', 'Booked')
     )
-    user_profile = UserProfile
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     start = models.DateTimeField()
     end = models.DateTimeField()
     status = models.CharField(max_length=2, default='F', choices=STATUS)
@@ -37,3 +33,6 @@ class Slot(AbstractTimeStamp):
     def mark_booked(self):
         self.status = 'B'
         self.save()
+
+    def __str__(self):
+        return '{user_profile}:{status}'.format(user_profile=self.user_profile, status=self.status)
