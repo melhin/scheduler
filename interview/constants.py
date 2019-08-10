@@ -1,0 +1,2 @@
+FREE = 'F'
+BOOKED = 'B'

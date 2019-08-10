@@ -4,6 +4,9 @@ from django.contrib.auth.models import AbstractUser
 
 from django.utils import timezone
 
+from core.constants import CANDIDATE
+from core.constants import INTERVIEWER
+
 
 class AbstractTimeStamp(models.Model):
     created = models.DateTimeField(editable=False)
@@ -31,8 +34,8 @@ class UserProfile(AbstractTimeStamp):
     like Role, education, qualification e.tc.
     """
     ROLES = (
-        ('IN', 'Interviewer'),
-        ('CA', 'Candidate')
+        (INTERVIEWER, 'Interviewer'),
+        (CANDIDATE, 'Candidate')
 
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE)

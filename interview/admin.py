@@ -3,5 +3,8 @@ from django.contrib import admin
 from interview.models import Slot
 
 
-admin.site.register(Slot)
+class SlotAdmin(admin.ModelAdmin):
+    readonly_fields = ['end']
 
+
+admin.site.register(Slot, SlotAdmin)

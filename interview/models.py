@@ -1,38 +1,102 @@
 from django.db import models
+from django.utils import timezone
+
+from core.constants import INTERVIEWER
+from core.constants import CANDIDATE
 
 from core.models import AbstractTimeStamp
 from core.models import UserProfile
 
+from interview.constants import FREE
+from interview.constants import BOOKED
+
 
 class SlotManager(models.Manager):
 
-    def get_interview_slots(self, role, start, end):
+    def get_interview_slots(self, role, start, end,
+                            specific_users=None):
         cross_ref_dct = {
-            'CA': 'IN',
-            'IN': 'CA',
+            CANDIDATE: INTERVIEWER,
+            INTERVIEWER: CANDIDATE,
         }
-        return self.get_queryset().filter(
+        resp = self.get_queryset().filter(
             user_profile__role=cross_ref_dct[role],
-            status='F',
+            status=FREE,
             start__gte=start,
             end__lte=end,
         )
+        if specific_users:
+            resp = resp.filter(user_profile__user__email__in=specific_users)
+        return resp
+
+    def get_slots_for_candidate(self, user_profile, specific_users=None):
+        """get_slots_for_candidate: Takes a user profile object for a candidate
+        and then returns the list of interview combination with interviewer[s]
+        information along with the start and end time
+        """
+        interview_slots = []
+        candidate_free_slots = self.get_queryset().filter(
+            user_profile=user_profile,
+            status=FREE,
+        )
+
+        for each_slot in candidate_free_slots:
+            available_interviewers = self.get_interview_slots(
+                user_profile.role,
+                each_slot.start,
+                each_slot.end,
+                specific_users=specific_users,
+            ).values(
+                'user_profile__user__first_name',
+                'user_profile__user__email',
+                'user_profile__user__id',
+            )
+            if available_interviewers:
+                interview_slots.append({
+                    'start': each_slot.start,
+                    'end': each_slot.end,
+                    'interviewers': available_interviewers,
+                })
+        return interview_slots
+
+    def get_slots_for_interviewers(self, users):
+        """get_slots_for_interviewer: Takes a list of user profile objects for
+        a interviewers then returns the list of interview combination with
+        candidate
+        """
+        user_profiles = UserProfile.objects.filter(user__email__in=users)
+        slots = {}
+        for ele in Slot.objects.filter(user_profile__in=user_profiles).values():
+            slots.setdefault(ele['start'], []).append(ele)
+
+        selected_slots = [val for k, val in slots.items() if len(user_profiles) == len(val)]
+        candidates = [self.get_interview_slots(INTERVIEWER, slots[0]['start'], slots[0]['end']) for slots in selected_slots]
 
 
 class Slot(AbstractTimeStamp):
     STATUS = (
-        ('F', 'Free'),
-        ('B', 'Booked')
+        (FREE, 'Free'),
+        (BOOKED, 'Booked')
     )
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     start = models.DateTimeField()
     end = models.DateTimeField()
-    status = models.CharField(max_length=2, default='F', choices=STATUS)
+    status = models.CharField(max_length=2, default=FREE, choices=STATUS)
     objects = SlotManager()
 
     def mark_booked(self):
-        self.status = 'B'
+        self.status = BOOKED
         self.save()
 
+    def save(self, *args, **kwargs):
+        """Overiding save so that we have the end set to one hour even from the admin
+        """
+        if self.start:
+            self.end = self.start + timezone.timedelta(hours=1)
+        return super(Slot, self).save(*args, **kwargs)
+
     def __str__(self):
-        return '{user_profile}:{status}'.format(user_profile=self.user_profile, status=self.status)
+        return '{user_profile}:{status}'.format(
+            user_profile=self.user_profile,
+            status=self.status,
+        )
