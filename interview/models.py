@@ -59,18 +59,52 @@ class SlotManager(models.Manager):
                 })
         return interview_slots
 
+    @staticmethod
+    def _assign_people(candidates, interviewers):
+        """_assign_people: Assign candidates and interviewers equally amongst
+        interviewers
+        """
+        tmp_intvs = list(interviewers)
+        grps = {}
+        i = 0
+        while tmp_intvs:
+            try:
+                can = candidates[i]
+            except IndexError:
+                i = 0
+                can = candidates[i]
+            grps.setdefault(can, []).append(tmp_intvs.pop(0))
+            i += 1
+        return grps
+
     def get_slots_for_interviewers(self, users):
         """get_slots_for_interviewer: Takes a list of user profile objects for
         a interviewers then returns the list of interview combination with
         candidate
         """
         user_profiles = UserProfile.objects.filter(user__email__in=users)
+        interview_slots = []
         slots = {}
-        for ele in Slot.objects.filter(user_profile__in=user_profiles).values():
+
+        # Get all the slots for user_profiles given
+        for ele in Slot.objects.filter(user_profile__in=user_profiles)\
+                .values():
             slots.setdefault(ele['start'], []).append(ele)
 
-        selected_slots = [val for k, val in slots.items() if len(user_profiles) == len(val)]
-        candidates = [self.get_interview_slots(INTERVIEWER, slots[0]['start'], slots[0]['end']) for slots in selected_slots]
+        # filter only slots that have all the user profiles involved
+        selected_slots = [
+            val
+            for _, val in slots.items()
+            if len(user_profiles) == len(val)
+        ]
+
+        for slots in selected_slots:
+            candidates = self.get_interview_slots(INTERVIEWER,
+                                                  slots[0]['start'],
+                                                  slots[0]['end'])
+            interview_slots.append(self._assign_people(candidates,
+                                                       user_profiles))
+        return interview_slots
 
 
 class Slot(AbstractTimeStamp):
