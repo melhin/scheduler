@@ -26,7 +26,7 @@ class SlotManager(models.Manager):
             end__lte=end,
         )
         if specific_users:
-            resp = resp.filter(user_profile__user__email__in=specific_users)
+            resp = resp.filter(user_profile__in=specific_users)
         return resp
 
     def get_slots_for_candidate(self, user_profile, specific_users=None):
@@ -46,15 +46,10 @@ class SlotManager(models.Manager):
                 each_slot.start,
                 each_slot.end,
                 specific_users=specific_users,
-            ).values(
-                'user_profile__user__first_name',
-                'user_profile__user__email',
-                'user_profile__user__id',
             )
             if available_interviewers:
                 interview_slots.append({
-                    'start': each_slot.start,
-                    'end': each_slot.end,
+                    'candidate': each_slot,
                     'interviewers': available_interviewers,
                 })
         return interview_slots
@@ -75,14 +70,20 @@ class SlotManager(models.Manager):
                 can = candidates[i]
             grps.setdefault(can, []).append(tmp_intvs.pop(0))
             i += 1
-        return grps
 
-    def get_slots_for_interviewers(self, users):
+        slots = []
+        for slot, intvs in grps.items():
+            slots.append({
+                'candidate': slot,
+                'interviewers': intvs,
+            })
+        return slots
+
+    def get_slots_for_interviewers(self, user_profiles):
         """get_slots_for_interviewer: Takes a list of user profile objects for
         a interviewers then returns the list of interview combination with
         candidate
         """
-        user_profiles = UserProfile.objects.filter(user__email__in=users)
         interview_slots = []
         slots = {}
 
