@@ -49,10 +49,13 @@ class SlotManager(models.Manager):
                 each_slot.end,
                 specific_users=specific_users,
             )
+            # setting interviewer user profile
+            interviewer_profile = [ele.user_profile
+                                   for ele in available_interviewers]
             if available_interviewers:
                 interview_slots.append({
                     'candidate': each_slot,
-                    'interviewers': available_interviewers,
+                    'interviewers': interviewer_profile,
                 })
         return interview_slots
 
@@ -105,7 +108,7 @@ class SlotManager(models.Manager):
             candidates = self.get_interview_slots(INTERVIEWER,
                                                   slots[0]['start'],
                                                   slots[0]['end'])
-            interview_slots.append(self._assign_people(candidates,
+            interview_slots.extend(self._assign_people(candidates,
                                                        user_profiles))
         return interview_slots
 
