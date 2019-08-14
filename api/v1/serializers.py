@@ -2,6 +2,10 @@ from api.utils import convert_to_epcoh
 
 
 class SlotSerializer(object):
+    """SlotSerializer: is a custom serializer for the nested data structure
+    we have for candidate and interviewers. This is raw and
+    little more flexible in this case
+    """
 
     def __init__(self, data):
         self.data = data
