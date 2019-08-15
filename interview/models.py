@@ -25,10 +25,10 @@ class SlotManager(models.Manager):
                 status=FREE,
                 start__gte=start,
                 end__lte=end,
-            )
+        )
         if specific_users:
             resp = resp.filter(user_profile__in=specific_users)
-        return resp
+        return resp.order_by('id')
 
     def get_slots_for_candidate(self, user_profile, specific_users=None):
         """get_slots_for_candidate: Takes a user profile object for a candidate
@@ -40,7 +40,7 @@ class SlotManager(models.Manager):
             select_related('user_profile__user').filter(
                 user_profile=user_profile,
                 status=FREE,
-            )
+        )
 
         for each_slot in candidate_free_slots:
             available_interviewers = self.get_interview_slots(
@@ -140,3 +140,6 @@ class Slot(AbstractTimeStamp):
             user_profile=self.user_profile,
             status=self.status,
         )
+
+    class Meta:
+        unique_together = ('user_profile', 'start')
