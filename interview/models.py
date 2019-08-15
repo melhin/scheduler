@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.utils import IntegrityError
 from django.utils import timezone
 
 from core.constants import INTERVIEWER
@@ -132,6 +133,16 @@ class Slot(AbstractTimeStamp):
         """Overiding save so that we have the end set to one hour even from the admin
         """
         if self.start:
+            booked_slot = self.__class__.objects.filter(
+                user_profile=self.user_profile,
+                start__range=[
+                    self.start - timezone.timedelta(hours=1),
+                    self.start
+                ],
+            ).exists()
+            if booked_slot:
+                raise IntegrityError
+
             self.end = self.start + timezone.timedelta(hours=1)
         return super(Slot, self).save(*args, **kwargs)
 

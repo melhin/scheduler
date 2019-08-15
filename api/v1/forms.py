@@ -1,8 +1,11 @@
 from django import forms
 from django.core.validators import validate_email
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
+from api.utils import convert_to_timestamp
 from core.models import UserProfile
+from interview.models import Slot
 
 
 class MultiEmailField(forms.Field):
@@ -54,3 +57,41 @@ class ScheduleForm(forms.Form):
         ]):
             raise forms.ValidationError(_('Either candidates or interiewers '
                                           'are required.'))
+
+
+class SubmitSlotForm(forms.Form):
+    user = forms.CharField(required=True)
+    start = forms.IntegerField(required=True)
+
+    def clean_start(self):
+        start = self.cleaned_data['start']
+        start = convert_to_timestamp(start)
+        if start <= timezone.now():
+            raise forms.ValidationError(_('Slot date should be greater '
+                                        'than current date'))
+        user_profile = self.cleaned_data['user_profile']
+        booked_slot = Slot.objects.filter(
+            user_profile=user_profile,
+            start__range=[
+                start - timezone.timedelta(hours=1),
+                start
+            ],
+        ).exists()
+        if booked_slot:
+            raise forms.ValidationError(_('User has a slot already booked '
+                                          'at this time'))
+        return start
+
+    def clean_user(self):
+        user = self.cleaned_data['user']
+        try:
+            self.cleaned_data['user_profile'] = UserProfile.objects.\
+                get(user_id=user)
+        except UserProfile.DoesNotExist:
+            raise forms.ValidationError(_('User Profile does '
+                                          'not exist for user'))
+        return user
+
+    def save(self):
+        Slot.objects.create(user_profile=self.cleaned_data['user_profile'],
+                            start=self.cleaned_data['start'])
