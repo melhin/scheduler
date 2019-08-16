@@ -1,6 +1,8 @@
 version: '3'
 
 services:
+  db:
+    image: postgres
   web:
     build: .
     volumes:
@@ -9,3 +11,5 @@ services:
       - "8080:8080"
     entrypoint:
         /code/entrypoint.sh
+    depends_on:
+        - db

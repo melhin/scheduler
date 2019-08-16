@@ -26,10 +26,18 @@ rebuild the wheel
 
 1. Install docker-compose up
 2. `docker-compose up` this will bring the application up. We are using this
-    here because in future when we want to connect to postgress we just have 
-    to adda dependency
+    here because we have to connect to postgress 
 3. The migrations and fixture loading are done by default so you dont have to 
 4. You should be able to login to the admin http://127.0.0.1:8080/
 5. To create tokens to access the api. You should docker exec into the container
     and run the `drf_create_token` to get the token 
+    ```
+    ./manage.py drf_create_token someone1
+    ./manage.py drf_create_token someone2
+    ./manage.py drf_create_token someone3
+    ./manage.py drf_create_token interviewer
+    ./manage.py drf_create_token int1
+    ./manage.py drf_create_token int2
+
+    ```
 
