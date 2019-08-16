@@ -4,10 +4,13 @@ from django.contrib.auth.models import AbstractUser
 
 from django.utils import timezone
 
+from core.constants import CANDIDATE
+from core.constants import INTERVIEWER
+
 
 class AbstractTimeStamp(models.Model):
     created = models.DateTimeField(editable=False)
-    modified = models.DateTimeField()
+    modified = models.DateTimeField(editable=False)
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
@@ -31,9 +34,12 @@ class UserProfile(AbstractTimeStamp):
     like Role, education, qualification e.tc.
     """
     ROLES = (
-        ('IN', 'Interviewer'),
-        ('CA', 'Candidate')
+        (INTERVIEWER, 'Interviewer'),
+        (CANDIDATE, 'Candidate')
 
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=4, choices=ROLES)
+
+    def __str__(self):
+        return '{user}:{role}'.format(user=self.user, role=self.role)
