@@ -16,7 +16,7 @@ rebuild the wheel
 2. Run the migrations
 3. For ease of use a set of users and user profiles are given as fixtures
    load them using `loaddata`
-4. For information about api. The endpoint docs are given in the api/v1/docs.md
+4. For information about api. The endpoint docs are given in the `api/v1/docs.md`
 5. To access the api you will need authentication token , to generate it use
    `python manage.py drf_create_token <username>` [to get user name use the django
     admin. ]
