@@ -3,7 +3,7 @@
 A bare minimum interviewer scheduler REST backend.
 
 ### What does this have?
-Scheduler has an sqlite backed rest backend for demonstration purposes.
+Scheduler has postgres based rest backend for demonstration purposes.
 There is one endpoint that is public with 2 methods and forms bulk of 
 its capablities.
 
@@ -21,6 +21,17 @@ rebuild the wheel
    `python manage.py drf_create_token <username>` [to get user name use the django
     admin. ]
 6. Admin: username: admin password: admin
+
+### How to create users ?
+
+For now there are no api for registering or login. Everything can be done via the admin
+Admin can be used heavily for administation purposes and easy access to slots
+
+1. Login to the admin
+2. Go to the User model and create a user
+3. You must also create a user profile [this marks the user as candidate or interview]
+    We have it as a seperate model for extension purposes
+4. Slots can be seen in the Slot model
 
 ### Running Via Docker
 
