@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from rest_framework.test import APIClient
 
+from api.utils import convert_to_epoch
 from core.models import User
 from interview.models import Slot
 
@@ -12,22 +13,28 @@ class ScheduleViewTestCase(TestCase):
 
     fixtures = ['fixtures/user.json']
 
-    def setUp(self):
-        self.client = APIClient()
-        self.url = reverse('schedule')
+    @classmethod
+    def setUpTestData(cls):
+        cls.client = APIClient()
+        cls.url = reverse('schedule')
 
-        tm_hr = timezone.now().replace(minute=00, second=00, microsecond=00)
-        self.candidate1 = User.objects.get(email='someone@someone.com')
-        Slot.objects.create(user_profile=self.candidate1.userprofile, start=tm_hr)
+        cls.tm_hr = timezone.now().replace(minute=00, second=00,
+                                           microsecond=00)
+        cls.candidate1 = User.objects.get(email='someone@someone.com')
+        Slot.objects.create(user_profile=cls.candidate1.userprofile,
+                            start=cls.tm_hr)
 
         # dummy canidate in the same time slot should not appear in the list
-        self.candidate2 = User.objects.get(email='someone1@someone1.com')
-        Slot.objects.create(user_profile=self.candidate2.userprofile, start=tm_hr)
+        cls.candidate2 = User.objects.get(email='someone1@someone1.com')
+        Slot.objects.create(user_profile=cls.candidate2.userprofile,
+                            start=cls.tm_hr)
 
-        self.interviewer1 = User.objects.get(email='int1@int1.com')
-        Slot.objects.create(user_profile=self.interviewer1.userprofile, start=tm_hr)
-        self.interviewer2 = User.objects.get(email='int2@int2.com')
-        Slot.objects.create(user_profile=self.interviewer2.userprofile, start=tm_hr)
+        cls.interviewer1 = User.objects.get(email='int1@int1.com')
+        Slot.objects.create(user_profile=cls.interviewer1.userprofile,
+                            start=cls.tm_hr)
+        cls.interviewer2 = User.objects.get(email='int2@int2.com')
+        Slot.objects.create(user_profile=cls.interviewer2.userprofile,
+                            start=cls.tm_hr)
 
     def test_schedule_retrieving_one_candidate(self):
 
@@ -88,7 +95,7 @@ class ScheduleViewTestCase(TestCase):
 
         client = APIClient()
         client.force_authenticate(user=self.candidate1)
-        response = client.get(self.url, {'candidate': 'someone100@someone100.com'})
+        response = client.get(self.url, {'candidate': 'some@some.com'})
 
         self.assertEqual(response.status_code, 400)
 
@@ -96,6 +103,33 @@ class ScheduleViewTestCase(TestCase):
 
         client = APIClient()
         client.force_authenticate(user=self.candidate1)
-        response = client.get(self.url, {'interviewer': 'someone100@someone100.com'})
+        response = client.get(self.url, {'interviewer': 'some@some.com'})
 
+        self.assertEqual(response.status_code, 400)
+
+    def test_schedule_post(self):
+        # given
+        client = APIClient()
+        client.force_authenticate(user=self.candidate1)
+        start = convert_to_epoch(self.tm_hr + timezone.timedelta(hours=2))
+
+        # when
+        response = client.post(self.url, {'start': start}, format='json')
+
+        # then
+        self.assertEqual(response.status_code, 200)
+
+    def test_schedule_post_slot_already_booked(self):
+        # given
+        client = APIClient()
+        client.force_authenticate(user=self.candidate1)
+        start = convert_to_epoch(self.tm_hr + timezone.timedelta(hours=2))
+        response = client.post(self.url, {'start': start}, format='json')
+
+        # when
+        start = convert_to_epoch(self.tm_hr + timezone.timedelta(hours=2,
+                                                                 minutes=59))
+        response = client.post(self.url, {'start': start}, format='json')
+
+        # then
         self.assertEqual(response.status_code, 400)

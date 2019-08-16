@@ -1,4 +1,4 @@
-from api.utils import convert_to_epcoh
+from api.utils import convert_to_epoch
 
 
 class SlotSerializer(object):
@@ -15,8 +15,8 @@ class SlotSerializer(object):
         return {
             'name': slot.user_profile.user.first_name,
             'email': slot.user_profile.user.email,
-            'start': convert_to_epcoh(slot.start),
-            'end': convert_to_epcoh(slot.end),
+            'start': convert_to_epoch(slot.start),
+            'end': convert_to_epoch(slot.end),
         }
 
     def serialize(self):

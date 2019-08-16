@@ -4,7 +4,7 @@ from datetime import datetime
 from django.utils import timezone
 
 
-def convert_to_epcoh(tm):
+def convert_to_epoch(tm):
     return int(time.mktime(tm.timetuple()))
 
 
