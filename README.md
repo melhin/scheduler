@@ -25,7 +25,9 @@ rebuild the wheel
 ### Running Via Docker
 
 1. Install docker-compose up
-2. `docker-compose up` [build the image]
+2. `docker-compose up` this will bring the application up. We are using this
+    here because in future when we want to connect to postgress we just have 
+    to adda dependency
 3. The migrations and fixture loading are done by default so you dont have to 
 4. You should be able to login to the admin http://127.0.0.1:8080/
 5. To create tokens to access the api. You should docker exec into the container
