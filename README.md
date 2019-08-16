@@ -31,7 +31,8 @@ Admin can be used heavily for administation purposes and easy access to slots
 2. Go to the User model and create a user
 3. You must also create a user profile [this marks the user as candidate or interview]
     We have it as a seperate model for extension purposes
-4. Slots can be seen in the Slot model
+4. Create tokens from Django Admin Auth Tokens
+5. Slots can be seen in the Slot model
 
 ### Running Via Docker
 
@@ -40,15 +41,3 @@ Admin can be used heavily for administation purposes and easy access to slots
     here because we have to connect to postgress 
 3. The migrations and fixture loading are done by default so you dont have to 
 4. You should be able to login to the admin http://127.0.0.1:8080/
-5. To create tokens to access the api. You should docker exec into the container
-    and run the `drf_create_token` to get the token 
-    ```
-    ./manage.py drf_create_token someone1
-    ./manage.py drf_create_token someone2
-    ./manage.py drf_create_token someone3
-    ./manage.py drf_create_token interviewer
-    ./manage.py drf_create_token int1
-    ./manage.py drf_create_token int2
-
-    ```
-
