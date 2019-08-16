@@ -68,7 +68,7 @@ class SlotManager(models.Manager):
         tmp_intvs = list(interviewers)
         grps = {}
         i = 0
-        while tmp_intvs:
+        while candidates and tmp_intvs:
             try:
                 can = candidates[i]
             except IndexError:
